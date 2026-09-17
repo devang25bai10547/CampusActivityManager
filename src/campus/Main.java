@@ -1,6 +1,9 @@
 package campus;
 
+import campus.enums.EventCategory;
+import campus.model.Event;
 import campus.model.Student;
+import campus.service.EventService;
 import campus.service.StudentService;
 
 import java.util.List;
@@ -9,7 +12,9 @@ import java.util.Scanner;
 public class Main {
 
     private static final Scanner scanner = new Scanner(System.in);
+
     private static final StudentService studentService = new StudentService();
+    private static final EventService eventService = new EventService();
 
     public static void main(String[] args) {
 
@@ -25,7 +30,7 @@ public class Main {
                     studentMenu();
                     break;
                 case 2:
-                    System.out.println("\nEvent Management will be available soon.");
+                    eventMenu();
                     break;
                 case 3:
                     System.out.println("\nRegistration will be available soon.");
@@ -206,6 +211,196 @@ public class Main {
             System.out.println("Student removed successfully.");
         } else {
             System.out.println("Student not found.");
+        }
+    }
+
+    private static void eventMenu() {
+
+        boolean back = false;
+
+        while (!back) {
+            System.out.println("\n----- EVENT MANAGEMENT -----");
+            System.out.println("1. Create Event");
+            System.out.println("2. View Events");
+            System.out.println("3. Search Event");
+            System.out.println("4. Update Event");
+            System.out.println("5. Cancel Event");
+            System.out.println("6. Back to Main Menu");
+
+            int choice = readInteger("Enter your choice: ");
+
+            switch (choice) {
+                case 1:
+                    addEvent();
+                    break;
+                case 2:
+                    viewEvents();
+                    break;
+                case 3:
+                    searchEvent();
+                    break;
+                case 4:
+                    updateEvent();
+                    break;
+                case 5:
+                    removeEvent();
+                    break;
+                case 6:
+                    back = true;
+                    break;
+                default:
+                    System.out.println("\nInvalid choice. Please try again.");
+            }
+        }
+    }
+
+    private static void addEvent() {
+
+        System.out.println("\n----- CREATE EVENT -----");
+
+        int eventId = readInteger("Enter event ID: ");
+
+        if (eventService.findEventById(eventId) != null) {
+            System.out.println("An event with this ID already exists.");
+            return;
+        }
+
+        System.out.print("Enter event name: ");
+        String eventName = scanner.nextLine();
+
+        EventCategory category = readEventCategory();
+
+        System.out.print("Enter event date: ");
+        String date = scanner.nextLine();
+
+        int maximumParticipants =
+                readInteger("Enter maximum participants: ");
+
+        Event event = new Event(
+                eventId,
+                eventName,
+                category,
+                date,
+                maximumParticipants
+        );
+
+        eventService.addEvent(event);
+
+        System.out.println("Event created successfully.");
+    }
+
+    private static EventCategory readEventCategory() {
+
+        while (true) {
+            System.out.println("\nSelect event category:");
+            System.out.println("1. Technical");
+            System.out.println("2. Cultural");
+            System.out.println("3. Sports");
+            System.out.println("4. Workshop");
+            System.out.println("5. Other");
+
+            int choice = readInteger("Enter category: ");
+
+            switch (choice) {
+                case 1:
+                    return EventCategory.TECHNICAL;
+                case 2:
+                    return EventCategory.CULTURAL;
+                case 3:
+                    return EventCategory.SPORTS;
+                case 4:
+                    return EventCategory.WORKSHOP;
+                case 5:
+                    return EventCategory.OTHER;
+                default:
+                    System.out.println("Invalid category. Please try again.");
+            }
+        }
+    }
+
+    private static void viewEvents() {
+
+        System.out.println("\n----- EVENT LIST -----");
+
+        List<Event> events = eventService.getAllEvents();
+
+        if (events.isEmpty()) {
+            System.out.println("No events found.");
+            return;
+        }
+
+        for (Event event : events) {
+            System.out.println(event);
+        }
+    }
+
+    private static void searchEvent() {
+
+        System.out.println("\n----- SEARCH EVENT -----");
+
+        int eventId = readInteger("Enter event ID: ");
+
+        Event event = eventService.findEventById(eventId);
+
+        if (event == null) {
+            System.out.println("Event not found.");
+        } else {
+            System.out.println("Event found:");
+            System.out.println(event);
+        }
+    }
+
+    private static void updateEvent() {
+
+        System.out.println("\n----- UPDATE EVENT -----");
+
+        int eventId = readInteger("Enter event ID: ");
+
+        Event event = eventService.findEventById(eventId);
+
+        if (event == null) {
+            System.out.println("Event not found.");
+            return;
+        }
+
+        System.out.print("Enter new event name: ");
+        String eventName = scanner.nextLine();
+
+        EventCategory category = readEventCategory();
+
+        System.out.print("Enter new event date: ");
+        String date = scanner.nextLine();
+
+        int maximumParticipants =
+                readInteger("Enter new maximum participants: ");
+
+        boolean updated = eventService.updateEvent(
+                eventId,
+                eventName,
+                category,
+                date,
+                maximumParticipants
+        );
+
+        if (updated) {
+            System.out.println("Event updated successfully.");
+        } else {
+            System.out.println("Unable to update event.");
+        }
+    }
+
+    private static void removeEvent() {
+
+        System.out.println("\n----- CANCEL EVENT -----");
+
+        int eventId = readInteger("Enter event ID: ");
+
+        boolean removed = eventService.removeEvent(eventId);
+
+        if (removed) {
+            System.out.println("Event cancelled successfully.");
+        } else {
+            System.out.println("Event not found.");
         }
     }
 
