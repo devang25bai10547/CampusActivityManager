@@ -2,8 +2,10 @@ package campus;
 
 import campus.enums.EventCategory;
 import campus.model.Event;
+import campus.model.Registration;
 import campus.model.Student;
 import campus.service.EventService;
+import campus.service.RegistrationService;
 import campus.service.StudentService;
 
 import java.util.List;
@@ -15,6 +17,8 @@ public class Main {
 
     private static final StudentService studentService = new StudentService();
     private static final EventService eventService = new EventService();
+    private static final RegistrationService registrationService =
+            new RegistrationService();
 
     public static void main(String[] args) {
 
@@ -33,7 +37,7 @@ public class Main {
                     eventMenu();
                     break;
                 case 3:
-                    System.out.println("\nRegistration will be available soon.");
+                    registrationMenu();
                     break;
                 case 4:
                     System.out.println("\nParticipation Management will be available soon.");
@@ -401,6 +405,149 @@ public class Main {
             System.out.println("Event cancelled successfully.");
         } else {
             System.out.println("Event not found.");
+        }
+    }
+
+    private static void registrationMenu() {
+
+        boolean back = false;
+
+        while (!back) {
+            System.out.println("\n----- REGISTRATION MANAGEMENT -----");
+            System.out.println("1. Register Student");
+            System.out.println("2. View Registrations");
+            System.out.println("3. Search Registration");
+            System.out.println("4. Cancel Registration");
+            System.out.println("5. Back to Main Menu");
+
+            int choice = readInteger("Enter your choice: ");
+
+            switch (choice) {
+                case 1:
+                    registerStudent();
+                    break;
+                case 2:
+                    viewRegistrations();
+                    break;
+                case 3:
+                    searchRegistration();
+                    break;
+                case 4:
+                    cancelRegistration();
+                    break;
+                case 5:
+                    back = true;
+                    break;
+                default:
+                    System.out.println("\nInvalid choice. Please try again.");
+            }
+        }
+    }
+
+    private static void registerStudent() {
+
+        System.out.println("\n----- REGISTER STUDENT -----");
+
+        int registrationId =
+                readInteger("Enter registration ID: ");
+
+        if (registrationService.findRegistrationById(registrationId) != null) {
+            System.out.println("A registration with this ID already exists.");
+            return;
+        }
+
+        int studentId = readInteger("Enter student ID: ");
+
+        Student student = studentService.findStudentById(studentId);
+
+        if (student == null) {
+            System.out.println("Student not found. Registration cancelled.");
+            return;
+        }
+
+        int eventId = readInteger("Enter event ID: ");
+
+        Event event = eventService.findEventById(eventId);
+
+        if (event == null) {
+            System.out.println("Event not found. Registration cancelled.");
+            return;
+        }
+
+        if (registrationService.studentAlreadyRegistered(
+                studentId, eventId)) {
+            System.out.println("Student is already registered for this event.");
+            return;
+        }
+
+        int currentRegistrations =
+                registrationService.countRegistrationsForEvent(eventId);
+
+        if (currentRegistrations >= event.getMaximumParticipants()) {
+            System.out.println("Event registration limit has been reached.");
+            return;
+        }
+
+        Registration registration = new Registration(
+                registrationId,
+                studentId,
+                eventId
+        );
+
+        registrationService.addRegistration(registration);
+
+        System.out.println("Student registered successfully.");
+    }
+
+    private static void viewRegistrations() {
+
+        System.out.println("\n----- REGISTRATION LIST -----");
+
+        List<Registration> registrations =
+                registrationService.getAllRegistrations();
+
+        if (registrations.isEmpty()) {
+            System.out.println("No registrations found.");
+            return;
+        }
+
+        for (Registration registration : registrations) {
+            System.out.println(registration);
+        }
+    }
+
+    private static void searchRegistration() {
+
+        System.out.println("\n----- SEARCH REGISTRATION -----");
+
+        int registrationId =
+                readInteger("Enter registration ID: ");
+
+        Registration registration =
+                registrationService.findRegistrationById(registrationId);
+
+        if (registration == null) {
+            System.out.println("Registration not found.");
+        } else {
+            System.out.println("Registration found:");
+            System.out.println(registration);
+        }
+    }
+
+    private static void cancelRegistration() {
+
+        System.out.println("\n----- CANCEL REGISTRATION -----");
+
+        int registrationId =
+                readInteger("Enter registration ID: ");
+
+        boolean removed =
+                registrationService.removeRegistration(registrationId);
+
+        if (removed) {
+            System.out.println("Registration cancelled successfully.");
+        } else {
+            System.out.println("Registration not found.");
         }
     }
 
