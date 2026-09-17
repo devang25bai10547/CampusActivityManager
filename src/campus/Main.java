@@ -1,10 +1,13 @@
 package campus;
 
 import campus.enums.EventCategory;
+import campus.enums.ParticipationStatus;
 import campus.model.Event;
+import campus.model.Participation;
 import campus.model.Registration;
 import campus.model.Student;
 import campus.service.EventService;
+import campus.service.ParticipationService;
 import campus.service.RegistrationService;
 import campus.service.StudentService;
 
@@ -19,6 +22,8 @@ public class Main {
     private static final EventService eventService = new EventService();
     private static final RegistrationService registrationService =
             new RegistrationService();
+    private static final ParticipationService participationService =
+            new ParticipationService();
 
     public static void main(String[] args) {
 
@@ -40,17 +45,19 @@ public class Main {
                     registrationMenu();
                     break;
                 case 4:
-                    System.out.println("\nParticipation Management will be available soon.");
+                    participationMenu();
                     break;
                 case 5:
                     System.out.println("\nReports will be available soon.");
                     break;
                 case 6:
                     running = false;
-                    System.out.println("\nThank you for using the Campus Activity & Event Management System.");
+                    System.out.println(
+                            "\nThank you for using the Campus Activity & Event Management System.");
                     break;
                 default:
-                    System.out.println("\nInvalid choice. Please enter a number from 1 to 6.");
+                    System.out.println(
+                            "\nInvalid choice. Please enter a number from 1 to 6.");
             }
         }
 
@@ -129,7 +136,8 @@ public class Main {
 
         int semester = readInteger("Enter semester: ");
 
-        Student student = new Student(studentId, name, department, semester);
+        Student student =
+                new Student(studentId, name, department, semester);
 
         studentService.addStudent(student);
 
@@ -451,52 +459,65 @@ public class Main {
         int registrationId =
                 readInteger("Enter registration ID: ");
 
-        if (registrationService.findRegistrationById(registrationId) != null) {
-            System.out.println("A registration with this ID already exists.");
+        if (registrationService.findRegistrationById(registrationId)
+                != null) {
+            System.out.println(
+                    "A registration with this ID already exists.");
             return;
         }
 
         int studentId = readInteger("Enter student ID: ");
 
-        Student student = studentService.findStudentById(studentId);
+        Student student =
+                studentService.findStudentById(studentId);
 
         if (student == null) {
-            System.out.println("Student not found. Registration cancelled.");
+            System.out.println(
+                    "Student not found. Registration cancelled.");
             return;
         }
 
         int eventId = readInteger("Enter event ID: ");
 
-        Event event = eventService.findEventById(eventId);
+        Event event =
+                eventService.findEventById(eventId);
 
         if (event == null) {
-            System.out.println("Event not found. Registration cancelled.");
+            System.out.println(
+                    "Event not found. Registration cancelled.");
             return;
         }
 
         if (registrationService.studentAlreadyRegistered(
                 studentId, eventId)) {
-            System.out.println("Student is already registered for this event.");
+
+            System.out.println(
+                    "Student is already registered for this event.");
             return;
         }
 
         int currentRegistrations =
                 registrationService.countRegistrationsForEvent(eventId);
 
-        if (currentRegistrations >= event.getMaximumParticipants()) {
-            System.out.println("Event registration limit has been reached.");
+        if (currentRegistrations >=
+                event.getMaximumParticipants()) {
+
+            System.out.println(
+                    "Event registration limit has been reached.");
             return;
         }
 
-        Registration registration = new Registration(
-                registrationId,
-                studentId,
-                eventId
-        );
+        Registration registration =
+                new Registration(
+                        registrationId,
+                        studentId,
+                        eventId
+                );
 
         registrationService.addRegistration(registration);
 
-        System.out.println("Student registered successfully.");
+        System.out.println(
+                "Student registered successfully.");
     }
 
     private static void viewRegistrations() {
@@ -524,7 +545,8 @@ public class Main {
                 readInteger("Enter registration ID: ");
 
         Registration registration =
-                registrationService.findRegistrationById(registrationId);
+                registrationService.findRegistrationById(
+                        registrationId);
 
         if (registration == null) {
             System.out.println("Registration not found.");
@@ -542,12 +564,189 @@ public class Main {
                 readInteger("Enter registration ID: ");
 
         boolean removed =
-                registrationService.removeRegistration(registrationId);
+                registrationService.removeRegistration(
+                        registrationId);
 
         if (removed) {
-            System.out.println("Registration cancelled successfully.");
+            System.out.println(
+                    "Registration cancelled successfully.");
         } else {
             System.out.println("Registration not found.");
+        }
+    }
+
+    private static void participationMenu() {
+
+        boolean back = false;
+
+        while (!back) {
+            System.out.println("\n----- PARTICIPATION MANAGEMENT -----");
+            System.out.println("1. Mark Participation");
+            System.out.println("2. View Participation");
+            System.out.println("3. Search Participation");
+            System.out.println("4. Update Participation");
+            System.out.println("5. Back to Main Menu");
+
+            int choice = readInteger("Enter your choice: ");
+
+            switch (choice) {
+                case 1:
+                    markParticipation();
+                    break;
+                case 2:
+                    viewParticipation();
+                    break;
+                case 3:
+                    searchParticipation();
+                    break;
+                case 4:
+                    updateParticipation();
+                    break;
+                case 5:
+                    back = true;
+                    break;
+                default:
+                    System.out.println(
+                            "\nInvalid choice. Please try again.");
+            }
+        }
+    }
+
+    private static void markParticipation() {
+
+        System.out.println("\n----- MARK PARTICIPATION -----");
+
+        int participationId =
+                readInteger("Enter participation ID: ");
+
+        if (participationService.findParticipationById(
+                participationId) != null) {
+
+            System.out.println(
+                    "A participation record with this ID already exists.");
+            return;
+        }
+
+        int registrationId =
+                readInteger("Enter registration ID: ");
+
+        Registration registration =
+                registrationService.findRegistrationById(
+                        registrationId);
+
+        if (registration == null) {
+            System.out.println(
+                    "Registration not found. Participation cannot be marked.");
+            return;
+        }
+
+        ParticipationStatus status = readParticipationStatus();
+
+        Participation participation =
+                new Participation(
+                        participationId,
+                        registrationId,
+                        status
+                );
+
+        participationService.addParticipation(participation);
+
+        System.out.println(
+                "Participation recorded successfully.");
+    }
+
+    private static ParticipationStatus readParticipationStatus() {
+
+        while (true) {
+            System.out.println("\nSelect participation status:");
+            System.out.println("1. Registered");
+            System.out.println("2. Attended");
+            System.out.println("3. Absent");
+
+            int choice = readInteger("Enter status: ");
+
+            switch (choice) {
+                case 1:
+                    return ParticipationStatus.REGISTERED;
+                case 2:
+                    return ParticipationStatus.ATTENDED;
+                case 3:
+                    return ParticipationStatus.ABSENT;
+                default:
+                    System.out.println(
+                            "Invalid status. Please try again.");
+            }
+        }
+    }
+
+    private static void viewParticipation() {
+
+        System.out.println("\n----- PARTICIPATION LIST -----");
+
+        List<Participation> participations =
+                participationService.getAllParticipations();
+
+        if (participations.isEmpty()) {
+            System.out.println("No participation records found.");
+            return;
+        }
+
+        for (Participation participation : participations) {
+            System.out.println(participation);
+        }
+    }
+
+    private static void searchParticipation() {
+
+        System.out.println("\n----- SEARCH PARTICIPATION -----");
+
+        int participationId =
+                readInteger("Enter participation ID: ");
+
+        Participation participation =
+                participationService.findParticipationById(
+                        participationId);
+
+        if (participation == null) {
+            System.out.println(
+                    "Participation record not found.");
+        } else {
+            System.out.println("Participation found:");
+            System.out.println(participation);
+        }
+    }
+
+    private static void updateParticipation() {
+
+        System.out.println("\n----- UPDATE PARTICIPATION -----");
+
+        int participationId =
+                readInteger("Enter participation ID: ");
+
+        Participation participation =
+                participationService.findParticipationById(
+                        participationId);
+
+        if (participation == null) {
+            System.out.println(
+                    "Participation record not found.");
+            return;
+        }
+
+        ParticipationStatus status = readParticipationStatus();
+
+        boolean updated =
+                participationService.updateStatus(
+                        participationId,
+                        status
+                );
+
+        if (updated) {
+            System.out.println(
+                    "Participation updated successfully.");
+        } else {
+            System.out.println(
+                    "Unable to update participation.");
         }
     }
 
@@ -561,7 +760,8 @@ public class Main {
             try {
                 return Integer.parseInt(input);
             } catch (NumberFormatException e) {
-                System.out.println("Invalid input. Please enter a number.");
+                System.out.println(
+                        "Invalid input. Please enter a number.");
             }
         }
     }
